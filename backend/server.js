@@ -1,9 +1,9 @@
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const TravelPreference = require('./models/TravelPreference'); // Import the model
+const express = require("express");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+const TravelPreference = require("./models/TravelPreference"); // Import the model
 
 dotenv.config();
 
@@ -12,19 +12,22 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // MongoDB connection
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => console.log('Connected to MongoDB'))
+mongoose
+  .connect(process.env.MONGO_URI, {
+    //useNewUrlParser: true,
+    // useUnifiedTopology: true,
+  })
+  .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.log(err));
 
 // Include the itinerary route for planning suggestions
-const itineraryRoute = require('./routes/itinerary');
-app.use('/api', itineraryRoute);
+const itineraryRoute = require("./routes/itinerary");
+app.use("/api", itineraryRoute);
 
 // Save user data to the database
-app.post('/api/save-preferences', (req, res) => {
-  const { startLocation, endLocation, groupSize, duration, vehicleType } = req.body;
+app.post("/api/save-preferences", (req, res) => {
+  const { startLocation, endLocation, groupSize, duration, vehicleType } =
+    req.body;
 
   const newPreference = new TravelPreference({
     startLocation,
@@ -34,13 +37,14 @@ app.post('/api/save-preferences', (req, res) => {
     vehicleType,
   });
 
-  newPreference.save()
+  newPreference
+    .save()
     .then(() => {
-      res.status(200).json({ message: 'Preferences saved successfully!' });
+      res.status(200).json({ message: "Preferences saved successfully!" });
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ message: 'Error saving preferences' });
+      res.status(500).json({ message: "Error saving preferences" });
     });
 });
 
