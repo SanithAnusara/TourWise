@@ -25,28 +25,31 @@ const itineraryRoute = require("./routes/itinerary");
 app.use("/api", itineraryRoute);
 
 // Save user data to the database
-app.post("/api/save-preferences", (req, res) => {
-  const { startLocation, endLocation, groupSize, duration, vehicleType } =
-    req.body;
+app.post("/api/save-preferences", async (req, res) => {
+  try {
+    let { startLocation, endLocation, groupSize, duration, vehicleType } = req.body;
 
-  const newPreference = new TravelPreference({
-    startLocation,
-    endLocation,
-    groupSize,
-    duration,
-    vehicleType,
-  });
+    // Ensure startLocation and endLocation are stored correctly
+    if (typeof startLocation === "string" || typeof endLocation === "string") {
+      return res.status(400).json({ message: "Invalid location format. Must include lat and lng." });
+    }
 
-  newPreference
-    .save()
-    .then(() => {
-      res.status(200).json({ message: "Preferences saved successfully!" });
-    })
-    .catch((err) => {
-      console.error(err);
-      res.status(500).json({ message: "Error saving preferences" });
+    const newPreference = new TravelPreference({
+      startLocation,
+      endLocation,
+      groupSize,
+      duration,
+      vehicleType,
     });
+
+    await newPreference.save();
+    res.status(200).json({ message: "Preferences saved successfully!", data: newPreference });
+  } catch (err) {
+    console.error("Error saving preferences:", err);
+    res.status(500).json({ message: "Error saving preferences", error: err.message });
+  }
 });
+
 
 const PORT = process.env.PORT || 4000;
 

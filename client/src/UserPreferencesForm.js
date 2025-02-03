@@ -75,10 +75,17 @@ const UserPreferencesForm = () => {
         })
       )
       .then((res) => res.json())
-      .then((itineraryData) => {
-        setItinerary(itineraryData.itinerary);
+      .then((data) => {
+        if (data.itinerary) {
+          setItinerary(data.itinerary);
+        } else {
+          throw new Error("Itinerary generation failed");
+        }
       })
-      .catch(() => setLocationError("Failed to submit preferences."));
+      .catch((error) => {
+        console.error("Error:", error);
+        setLocationError(`Failed to generate itinerary: ${error.message}`);
+      });
   };
 
   return (
