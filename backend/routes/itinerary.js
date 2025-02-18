@@ -1,15 +1,34 @@
-const express = require('express');
-const router = express.Router();
-const TravelPreference = require('../models/TravelPreference'); // Import the model
+const express = require("express");
+const OpenAI = require("openai"); // Ensure you install: npm install openai
+const dotenv = require("dotenv");
 
-// Route to save user preferences
-router.post('/save-preferences', async (req, res) => {
+dotenv.config();
+const router = express.Router();
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+router.post("/generate-itinerary", async (req, res) => {
   try {
-    const newPreference = new TravelPreference(req.body);
-    await newPreference.save();
-    res.json({ message: 'Preferences saved successfully', data: newPreference });
+    const { startLocation, endLocation, groupSize, duration, vehicleType } = req.body;
+
+    if (!startLocation || !endLocation || !groupSize || !duration || !vehicleType) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    // Generate itinerary using ChatGPT
+    const prompt = `Create a ${duration}-day travel itinerary from ${startLocation.lat},${startLocation.lng} 
+    to ${endLocation.lat},${endLocation.lng} for a group of ${groupSize} traveling by ${vehicleType}. 
+    Include places to visit and activities each day.`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    res.json({ itinerary: response.choices[0].message.content });
   } catch (error) {
-    res.status(500).json({ error: 'Error saving preferences' });
+    console.error("Error generating itinerary:", error);
+    res.status(500).json({ message: "Failed to generate itinerary", error: error.message });
   }
 });
 

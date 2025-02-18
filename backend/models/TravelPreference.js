@@ -1,14 +1,17 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const TravelPreferenceSchema = new mongoose.Schema({
-  startLocation: String,
-  endLocation: String,
-  groupSize: Number,
-  duration: Number,
-  vehicleType: String,
-  createdAt: { type: Date, default: Date.now },
+  startLocation: { 
+    lat: { type: Number, required: true }, 
+    lng: { type: Number, required: true } 
+  },
+  endLocation: { 
+    lat: { type: Number, required: true }, 
+    lng: { type: Number, required: true } 
+  },
+  groupSize: { type: Number, required: true },
+  duration: { type: Number, required: true },
+  vehicleType: { type: String, required: true },
 });
 
-const TravelPreference = mongoose.model('TravelPreference', TravelPreferenceSchema);
-
-module.exports = TravelPreference;
+module.exports = mongoose.model("TravelPreference", TravelPreferenceSchema);
