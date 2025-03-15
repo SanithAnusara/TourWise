@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+//This schema defines how travel preferences will be stored in the database
 const TravelPreferenceSchema = new mongoose.Schema({
   startLocation: { 
     lat: { type: Number, required: true }, 
@@ -14,4 +15,5 @@ const TravelPreferenceSchema = new mongoose.Schema({
   vehicleType: { type: String, required: true },
 });
 
+//Creates and exports a model called "TravelPreference" based on the TravelPreferenceSchema
 module.exports = mongoose.model("TravelPreference", TravelPreferenceSchema);

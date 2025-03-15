@@ -10,10 +10,11 @@ const mapContainerStyle = {
 };
 
 const center = {
-  lat: 6.9271,
-  lng: 79.8612,
+  lat: 51.5166,
+  lng: 0.1353,
 };
 
+//Component State Initialization
 const UserPreferencesForm = () => {
   const [startLocation, setStartLocation] = useState(null);
   const [endLocation, setEndLocation] = useState(null);
@@ -42,12 +43,14 @@ const UserPreferencesForm = () => {
     }
   };
 
+  //Reset Start & End Locations
   const resetLocations = () => {
     setStartLocation(null);
     setEndLocation(null);
     setLocationError("");
   };
 
+  //Handle Form Submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!startLocation || !endLocation) {
@@ -85,7 +88,8 @@ const UserPreferencesForm = () => {
 
       const itineraryData = await itineraryResponse.json();
       if (!itineraryResponse.ok) throw new Error(itineraryData.message || "Failed to generate itinerary.");
-
+      
+      //Update State with AI Response
       setItinerary(itineraryData.itinerary);
     } catch (error) {
       setLocationError(`Error: ${error.message}`);
