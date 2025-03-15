@@ -8,7 +8,7 @@ const router = express.Router();//router is an instance of express.Router(), whi
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY }); //Initializing OpenAI API
 
 //Handles user requests to generate an itinerary
-router.post("/generate-itinerary", async (req, res) => {
+router.post("/itineraries", async (req, res) => {
   try {
     const { startLocation, endLocation, groupSize, duration, vehicleType } = req.body; //Extracts travel details from the request body
 

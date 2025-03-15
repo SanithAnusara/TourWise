@@ -70,7 +70,7 @@ const UserPreferencesForm = () => {
       setLoading(true);
       
       // Save user preferences
-      const saveResponse = await fetch("http://localhost:4000/api/save-preferences", {
+      const saveResponse = await fetch("http://localhost:4000/api/preferences", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
@@ -80,7 +80,7 @@ const UserPreferencesForm = () => {
       if (!saveResponse.ok) throw new Error(saveData.message || "Failed to save preferences.");
 
       // Generate itinerary
-      const itineraryResponse = await fetch("http://localhost:4000/api/generate-itinerary", {
+      const itineraryResponse = await fetch("http://localhost:4000/api/itineraries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),

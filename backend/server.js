@@ -23,11 +23,11 @@ mongoose.connect(process.env.MONGO_URI, {
 
 
 // Include the itinerary route for planning suggestions
-const itineraryRoute = require("./routes/itinerary");
+const itineraryRoute = require("./routes/itineraries");
 app.use("/api", itineraryRoute);//All routes in itinerary.js are prefixed with /api
 
 // Save user data to the database
-app.post("/api/save-preferences", async (req, res) => {
+app.post("/api/preferences", async (req, res) => {
   try {
     let { startLocation, endLocation, groupSize, duration, vehicleType } = req.body;
 
