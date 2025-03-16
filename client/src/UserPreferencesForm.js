@@ -14,7 +14,6 @@ const center = {
   lng: 0.1353,
 };
 
-//Component State Initialization
 const UserPreferencesForm = () => {
   const [startLocation, setStartLocation] = useState(null);
   const [endLocation, setEndLocation] = useState(null);
@@ -43,34 +42,20 @@ const UserPreferencesForm = () => {
     }
   };
 
-  //Reset Start & End Locations
-  const resetLocations = () => {
-    setStartLocation(null);
-    setEndLocation(null);
-    setLocationError("");
-  };
-
-  //Handle Form Submission
+  // Handle Form Submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!startLocation || !endLocation) {
       setLocationError("Please select both start and end locations.");
       return;
     }
 
-    const userData = {
-      startLocation,
-      endLocation,
-      groupSize,
-      duration,
-      vehicleType,
-    };
+    const userData = { startLocation, endLocation, groupSize, duration, vehicleType };
 
     try {
       setLoading(true);
-      
-      // Save user preferences
-      const saveResponse = await fetch("http://localhost:4000/api/preferences", {
+      const saveResponse = await fetch("http://localhost:4000/api/itineraries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
@@ -79,18 +64,7 @@ const UserPreferencesForm = () => {
       const saveData = await saveResponse.json();
       if (!saveResponse.ok) throw new Error(saveData.message || "Failed to save preferences.");
 
-      // Generate itinerary
-      const itineraryResponse = await fetch("http://localhost:4000/api/itineraries", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
-      });
-
-      const itineraryData = await itineraryResponse.json();
-      if (!itineraryResponse.ok) throw new Error(itineraryData.message || "Failed to generate itinerary.");
-      
-      //Update State with AI Response
-      setItinerary(itineraryData.itinerary);
+      setItinerary(saveData.data.itineraryText);
     } catch (error) {
       setLocationError(`Error: ${error.message}`);
     } finally {
@@ -99,7 +73,7 @@ const UserPreferencesForm = () => {
   };
 
   return (
-    <LoadScript googleMapsApiKey="AIzaSyA9azTdCHv4RBAQms7mYHlew9TfATz56-E">
+    <LoadScript googleMapsApiKey="YOUR_GOOGLE_MAPS_API_KEY">
       <form onSubmit={handleSubmit} className="preferences-form">
         <h2>Travel Preferences</h2>
 
@@ -109,10 +83,6 @@ const UserPreferencesForm = () => {
           <button type="button" onClick={getCurrentLocation} className="btn">
             Use Current Location
           </button>
-          <button type="button" onClick={resetLocations} className="btn btn-secondary">
-            Reset Locations
-          </button>
-          {locationError && <p className="error">{locationError}</p>}
         </div>
 
         {/* Google Map */}
@@ -173,6 +143,9 @@ const UserPreferencesForm = () => {
         <button type="submit" className="btn-submit" disabled={loading}>
           {loading ? "Submitting..." : "Submit Preferences"}
         </button>
+
+        {/* Display Errors */}
+        {locationError && <p className="error">{locationError}</p>}
 
         {/* Itinerary Output */}
         {itinerary && (
