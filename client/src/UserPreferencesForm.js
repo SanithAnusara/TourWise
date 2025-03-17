@@ -73,7 +73,7 @@ const UserPreferencesForm = () => {
   };
 
   return (
-    <LoadScript googleMapsApiKey="YOUR_GOOGLE_MAPS_API_KEY">
+    <LoadScript googleMapsApiKey="AIzaSyDJTBEHycR37sSWikqUffU8ok7OJt64ckY">
       <form onSubmit={handleSubmit} className="preferences-form">
         <h2>Travel Preferences</h2>
 
