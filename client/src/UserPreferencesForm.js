@@ -6,7 +6,7 @@ const mapContainerStyle = {
   width: "100%",
   height: "400px",
   borderRadius: "10px",
-  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
+
 };
 
 const center = {
@@ -45,14 +45,13 @@ const UserPreferencesForm = () => {
   // Handle Form Submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!startLocation || !endLocation) {
       setLocationError("Please select both start and end locations.");
       return;
     }
-
+  
     const userData = { startLocation, endLocation, groupSize, duration, vehicleType };
-
+  
     try {
       setLoading(true);
       const saveResponse = await fetch("http://localhost:4000/api/itineraries", {
@@ -60,17 +59,27 @@ const UserPreferencesForm = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
       });
-
+  
       const saveData = await saveResponse.json();
+      console.log("POST Response:", saveData); // Check what is being returned after posting preferences
+  
       if (!saveResponse.ok) throw new Error(saveData.message || "Failed to save preferences.");
-
-      setItinerary(saveData.data.itineraryText);
+  
+      const itineraryResponse = await fetch("http://localhost:4000/api/itineraries/latest");
+      const fetchedItinerary = await itineraryResponse.json();
+      console.log("Fetched Itinerary:", fetchedItinerary); // Verify fetched itinerary data
+  
+      if (!itineraryResponse.ok) throw new Error(fetchedItinerary.message || "Failed to retrieve itinerary.");
+  
+      setItinerary(fetchedItinerary);
     } catch (error) {
+      console.error(`Error: ${error.message}`);
       setLocationError(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
-  };
+  };  
+  
 
   return (
     <LoadScript googleMapsApiKey="AIzaSyDJTBEHycR37sSWikqUffU8ok7OJt64ckY">
@@ -148,15 +157,39 @@ const UserPreferencesForm = () => {
         {locationError && <p className="error">{locationError}</p>}
 
         {/* Itinerary Output */}
-        {itinerary && (
+        {itinerary && itinerary.Days && (
           <div className="itinerary-section">
             <h3>Generated Itinerary</h3>
-            <pre>{itinerary}</pre>
+            <table>
+              <thead>
+                <tr>
+                  <th>Day</th>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Accommodation</th>
+                  <th>Activities</th>
+                </tr>
+              </thead>
+              <tbody>
+                {itinerary.Days.map((day, index) => (
+                  <tr key={index}>
+                    <td>{day.DayNumber}</td>
+                    <td>{day.From}</td>
+                    <td>{day.To}</td>
+                    <td>{day.Accommodation}</td>
+                    <td>{day.Activities.join(", ")}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
+
+
       </form>
-    </LoadScript>
-  );
-};
+      </LoadScript>
+      
+    );
+  };
 
 export default UserPreferencesForm;
