@@ -19,9 +19,14 @@ const UserPreferencesForm = () => {
   const [groupSize, setGroupSize] = useState(1);
   const [duration, setDuration] = useState(1);
   const [vehicleType, setVehicleType] = useState("");
+  const [fuelType, setFuelType] = useState("");
+  const [fuelEfficiency, setFuelEfficiency] = useState("");
   const [locationError, setLocationError] = useState("");
   const [itinerary, setItinerary] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Conditional input fields based on vehicle type
+  const isFuelNeeded = vehicleType === 'car' || vehicleType === 'bike';
 
   // Get user's current location
   const getCurrentLocation = () => {
@@ -55,6 +60,8 @@ const UserPreferencesForm = () => {
       groupSize,
       duration,
       vehicleType,
+      fuelType: isFuelNeeded ? fuelType : undefined,
+      fuelEfficiency: isFuelNeeded ? fuelEfficiency : undefined
     };
 
     try {
@@ -171,6 +178,25 @@ const UserPreferencesForm = () => {
             <option value="bike">Bike</option>
             <option value="walk">Walk</option>
           </select>
+
+          {isFuelNeeded && (
+          <>
+            <select value={fuelType} onChange={e => setFuelType(e.target.value)} required>
+              <option value="">Select Fuel Type</option>
+              <option value="petrol">Petrol</option>
+              <option value="diesel">Diesel</option>
+              <option value="electric">Electric</option>
+            </select>
+
+            <input 
+              type="number" 
+              placeholder="Fuel Efficiency (km/l or kWh/km)" 
+              value={fuelEfficiency} 
+              onChange={e => setFuelEfficiency(e.target.value)} 
+              required 
+            />
+          </>
+        )}
         </div>
 
         {/* Submit Button */}

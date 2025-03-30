@@ -9,7 +9,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Create a new itinerary (POST /api/itineraries)
 router.post("/itineraries", async (req, res) => {
-  const { startLocation, endLocation, groupSize, duration, vehicleType } = req.body;
+  const { startLocation, endLocation, groupSize, duration, vehicleType, fuelEfficiency, fuelType } = req.body;
   const prompt = `Create a travel itinerary plan for the following data.
     From ${startLocation.lat},${startLocation.lng} to ${endLocation.lat},${endLocation.lng},
     A group of ${groupSize} people,
@@ -25,6 +25,7 @@ router.post("/itineraries", async (req, res) => {
         "To" : "To location of the day",
         "Accommodation" : "Accommodation location at the end of the day",
         "Activities" : "Activities to do within the day"
+        "Distance" : "Exact travel distance of the day in kms" 
       }]`;
 
   try {
@@ -34,7 +35,7 @@ router.post("/itineraries", async (req, res) => {
     });
 
     // Log the full response for debugging
-    console.log("OpenAI Response:", response.choices[0].message.content);
+     console.log("OpenAI Response:", response.choices[0].message.content);
 
     // Attempt to locate the start and end of JSON content
     const startIndex = response.choices[0].message.content.indexOf('{');
@@ -49,14 +50,30 @@ router.post("/itineraries", async (req, res) => {
     // Parse the JSON data
     const itineraryData = JSON.parse(jsonString);
 
+    const totalTravelDistance = itineraryData.Days.reduce((acc, day) => {
+      return acc + parseInt(day.Distance, 10);  // Ensure the distance is treated as an integer
+    }, 0);
+  
+
+    console.log("Calculated total travel distance:", totalTravelDistance);
+    if (totalTravelDistance === 0) {
+        throw new Error("Total distance calculated as zero, check day entries");
+    }
+
     const newItinerary = new Itinerary({
       startLocation,
       endLocation,
       groupSize,
       duration,
       vehicleType,
-      itinerary: itineraryData.Days
+      fuelType,
+      fuelEfficiency,
+      itinerary: itineraryData.Days,
+      totalTravelDistance
     });
+
+    console.log("Saving new itinerary with total distance: ", newItinerary.totalTravelDistance);
+    
 
     await newItinerary.save();
     res.status(201).json({ message: "Itinerary created successfully!", data: newItinerary });
