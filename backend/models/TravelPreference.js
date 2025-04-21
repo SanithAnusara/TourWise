@@ -5,7 +5,9 @@ const ItineraryDaySchema = new mongoose.Schema({
   From: { type: String, required: true },
   To: { type: String, required: true },
   Accommodation: { type: String, required: true },
-  Activities: { type: String, required: true }
+  Activities: [{ type: String, required: true }], // Update this line to specify an array of strings
+  Transportation: { type: String },
+  SustainabilityTips: [{ type: String }]
 });
 
 const TravelPreferenceSchema = new mongoose.Schema({
@@ -20,7 +22,11 @@ const TravelPreferenceSchema = new mongoose.Schema({
   groupSize: { type: Number, required: true },
   duration: { type: Number, required: true },
   vehicleType: { type: String, required: true },
-  itinerary: [ItineraryDaySchema]  // Updated to store an array of days
+  fuelType: { type: String },
+  fuelEfficiency: { type: Number },
+  itinerary: [ItineraryDaySchema],  // Make sure this accommodates an array of ItineraryDaySchema
+  totalTravelDistance: { type: Number, required: false },
+  carbonEmission: { type: Number }
 });
 
 module.exports = mongoose.model("TravelPreference", TravelPreferenceSchema);
