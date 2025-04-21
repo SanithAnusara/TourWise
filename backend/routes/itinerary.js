@@ -2,6 +2,8 @@ const express = require("express");
 const OpenAI = require("openai");
 const dotenv = require("dotenv");
 const Itinerary = require("../models/TravelPreference"); // Ensure this path is correct
+const calculateCarbonEmission = require("../utils/calculateCarbon");
+
 
 dotenv.config();
 const router = express.Router();
@@ -53,6 +55,13 @@ router.post("/itineraries", async (req, res) => {
     const totalTravelDistance = itineraryData.Days.reduce((acc, day) => {
       return acc + parseInt(day.Distance, 10);  // Ensure the distance is treated as an integer
     }, 0);
+
+    const carbonEmission = calculateCarbonEmission({
+      vehicleType,
+      fuelType,
+      fuelEfficiency,
+      distance: totalTravelDistance
+    });
   
 
     console.log("Calculated total travel distance:", totalTravelDistance);
@@ -69,7 +78,8 @@ router.post("/itineraries", async (req, res) => {
       fuelType,
       fuelEfficiency,
       itinerary: itineraryData.Days,
-      totalTravelDistance
+      totalTravelDistance,
+      carbonEmission
     });
 
     console.log("Saving new itinerary with total distance: ", newItinerary.totalTravelDistance);

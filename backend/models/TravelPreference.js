@@ -25,7 +25,8 @@ const TravelPreferenceSchema = new mongoose.Schema({
   fuelType: { type: String },
   fuelEfficiency: { type: Number },
   itinerary: [ItineraryDaySchema],  // Make sure this accommodates an array of ItineraryDaySchema
-  totalTravelDistance: { type: Number, required: false }
+  totalTravelDistance: { type: Number, required: false },
+  carbonEmission: { type: Number }
 });
 
 module.exports = mongoose.model("TravelPreference", TravelPreferenceSchema);
