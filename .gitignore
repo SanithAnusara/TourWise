@@ -1,3 +1,6 @@
+# Ignore environment variables and secrets
 backend/.env
+
+# Ignore node_modules (both client and backend)
 backend/node_modules
 client/node_modules
