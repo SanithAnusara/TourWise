@@ -44,6 +44,33 @@
     background-color: #0056b3;
 }
 
+.location-inputs {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+}
+
+.location-search {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.location-search:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.selected-location {
+  margin-top: 5px;
+  font-size: 0.9em;
+  color: #4a90e2;
+}
+
 .error-text {
     color: red;
     font-size: 14px;
@@ -109,4 +136,3 @@
   th:first-child, td:first-child {
     text-align: center;
   }
-  

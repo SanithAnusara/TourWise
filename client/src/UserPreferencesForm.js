@@ -1,6 +1,13 @@
-import React, { useState } from "react";
-import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+import React, { useState, useRef } from "react";
+import {
+  GoogleMap,
+  LoadScript,
+  Marker,
+  Autocomplete,
+} from "@react-google-maps/api";
 import "./UserPreferencesForm.css";
+
+const libraries = ["places"];
 
 const mapContainerStyle = {
   width: "100%",
@@ -24,18 +31,30 @@ const UserPreferencesForm = () => {
   const [locationError, setLocationError] = useState("");
   const [itinerary, setItinerary] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isStartSearching, setIsStartSearching] = useState(false);
+  const [isEndSearching, setIsEndSearching] = useState(false);
+  const [startAddress, setStartAddress] = useState("");
+  const [endAddress, setEndAddress] = useState("");
 
-  // Conditional input fields based on vehicle type
-  const isFuelNeeded = vehicleType === 'car' || vehicleType === 'bike';
+  const startAutocompleteRef = useRef(null);
+  const endAutocompleteRef = useRef(null);
+  const startInputRef = useRef(null);
+  const endInputRef = useRef(null);
 
-  // Get user's current location
+  const isFuelNeeded = vehicleType === "car" || vehicleType === "bike";
+
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const { latitude, longitude } = position.coords;
           setStartLocation({ lat: latitude, lng: longitude });
           setLocationError("");
+          const address = await reverseGeocode(latitude, longitude);
+          setStartAddress(address);
+          if (startInputRef.current) {
+            startInputRef.current.value = address;
+          }
         },
         () => {
           setLocationError("Failed to get location. Please select manually.");
@@ -46,7 +65,57 @@ const UserPreferencesForm = () => {
     }
   };
 
-  // Handle Form Submission
+  const reverseGeocode = async (lat, lng) => {
+    const apiKey = "AIzaSyA9azTdCHv4RBAQms7mYHlew9TfATz56-E";
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
+    );
+    const data = await response.json();
+    return data.results[0]?.formatted_address || "Unknown location";
+  };
+
+  const onStartLoad = (autocomplete) => {
+    startAutocompleteRef.current = autocomplete;
+    setIsStartSearching(true);
+  };
+
+  const onEndLoad = (autocomplete) => {
+    endAutocompleteRef.current = autocomplete;
+    setIsEndSearching(true);
+  };
+
+  const onStartPlaceChanged = () => {
+    if (startAutocompleteRef.current) {
+      const place = startAutocompleteRef.current.getPlace();
+      if (place.geometry) {
+        setStartLocation({
+          lat: place.geometry.location.lat(),
+          lng: place.geometry.location.lng(),
+        });
+        setStartAddress(place.formatted_address);
+        if (startInputRef.current) {
+          startInputRef.current.value = place.formatted_address;
+        }
+      }
+    }
+  };
+
+  const onEndPlaceChanged = () => {
+    if (endAutocompleteRef.current) {
+      const place = endAutocompleteRef.current.getPlace();
+      if (place.geometry) {
+        setEndLocation({
+          lat: place.geometry.location.lat(),
+          lng: place.geometry.location.lng(),
+        });
+        setEndAddress(place.formatted_address);
+        if (endInputRef.current) {
+          endInputRef.current.value = place.formatted_address;
+        }
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!startLocation || !endLocation) {
@@ -61,7 +130,7 @@ const UserPreferencesForm = () => {
       duration,
       vehicleType,
       fuelType: isFuelNeeded ? fuelType : undefined,
-      fuelEfficiency: isFuelNeeded ? fuelEfficiency : undefined
+      fuelEfficiency: isFuelNeeded ? fuelEfficiency : undefined,
     };
 
     try {
@@ -76,23 +145,21 @@ const UserPreferencesForm = () => {
       );
 
       const saveData = await saveResponse.json();
-      console.log("POST Response:", saveData); // Check what is being returned after posting preferences
-
-      if (!saveResponse.ok)
+      if (!saveResponse.ok) {
         throw new Error(saveData.message || "Failed to save preferences.");
+      }
 
       const itineraryResponse = await fetch(
         "http://localhost:4000/api/itineraries/latest"
       );
       const fetchedItinerary = await itineraryResponse.json();
-      console.log("Fetched Itinerary:", fetchedItinerary); // Verify fetched itinerary data
-
-      if (!itineraryResponse.ok)
+      if (!itineraryResponse.ok) {
         throw new Error(
           fetchedItinerary.message || "Failed to retrieve itinerary."
         );
+      }
 
-      setItinerary(fetchedItinerary); // Set itinerary if successfully fetched
+      setItinerary(fetchedItinerary);
     } catch (error) {
       console.error(`Error: ${error.message}`);
       setLocationError(`Error: ${error.message}`);
@@ -102,34 +169,74 @@ const UserPreferencesForm = () => {
   };
 
   return (
-    <LoadScript googleMapsApiKey="AIzaSyDJTBEHycR37sSWikqUffU8ok7OJt64ckY">
+    <LoadScript
+      googleMapsApiKey="AIzaSyA9azTdCHv4RBAQms7mYHlew9TfATz56-E"
+      libraries={libraries}
+    >
       <form onSubmit={handleSubmit} className="preferences-form">
         <h2>Travel Preferences</h2>
 
-        {/* Start Location */}
         <div className="form-group">
           <label>Start Location:</label>
-          <button type="button" onClick={getCurrentLocation} className="btn">
-            Use Current Location
-          </button>
+          <div className="location-inputs">
+            <Autocomplete
+              onLoad={onStartLoad}
+              onPlaceChanged={onStartPlaceChanged}
+            >
+              <input
+                ref={startInputRef}
+                type="text"
+                placeholder={
+                  isStartSearching ? "Search start location" : "Loading..."
+                }
+                className="location-search"
+                value={startAddress}
+                onChange={(e) => setStartAddress(e.target.value)}
+              />
+            </Autocomplete>
+            <button type="button" onClick={getCurrentLocation} className="btn">
+              Use Current Location
+            </button>
+          </div>
         </div>
 
-        {/* Google Map */}
+        <div className="form-group">
+          <label>End Location:</label>
+          <Autocomplete onLoad={onEndLoad} onPlaceChanged={onEndPlaceChanged}>
+            <input
+              ref={endInputRef}
+              type="text"
+              placeholder={
+                isEndSearching ? "Search end location" : "Loading..."
+              }
+              className="location-search"
+              value={endAddress}
+              onChange={(e) => setEndAddress(e.target.value)}
+            />
+          </Autocomplete>
+        </div>
+
         <GoogleMap
           mapContainerStyle={mapContainerStyle}
           zoom={10}
           center={startLocation || center}
-          onClick={(event) => {
+          onClick={async (event) => {
+            const lat = event.latLng.lat();
+            const lng = event.latLng.lng();
             if (!startLocation) {
-              setStartLocation({
-                lat: event.latLng.lat(),
-                lng: event.latLng.lng(),
-              });
+              setStartLocation({ lat, lng });
+              const address = await reverseGeocode(lat, lng);
+              setStartAddress(address);
+              if (startInputRef.current) {
+                startInputRef.current.value = address;
+              }
             } else {
-              setEndLocation({
-                lat: event.latLng.lat(),
-                lng: event.latLng.lng(),
-              });
+              setEndLocation({ lat, lng });
+              const address = await reverseGeocode(lat, lng);
+              setEndAddress(address);
+              if (endInputRef.current) {
+                endInputRef.current.value = address;
+              }
             }
           }}
         >
@@ -137,7 +244,6 @@ const UserPreferencesForm = () => {
           {endLocation && <Marker position={endLocation} />}
         </GoogleMap>
 
-        {/* Group Size */}
         <div className="form-group">
           <label>Group Size:</label>
           <input
@@ -149,7 +255,6 @@ const UserPreferencesForm = () => {
           />
         </div>
 
-        {/* Duration */}
         <div className="form-group">
           <label>Duration (days):</label>
           <input
@@ -161,7 +266,6 @@ const UserPreferencesForm = () => {
           />
         </div>
 
-        {/* Vehicle Type */}
         <div className="form-group">
           <label>Vehicle Type:</label>
           <select
@@ -180,34 +284,35 @@ const UserPreferencesForm = () => {
           </select>
 
           {isFuelNeeded && (
-          <>
-            <select value={fuelType} onChange={e => setFuelType(e.target.value)} required>
-              <option value="">Select Fuel Type</option>
-              <option value="petrol">Petrol</option>
-              <option value="diesel">Diesel</option>
-              <option value="electric">Electric</option>
-            </select>
+            <>
+              <select
+                value={fuelType}
+                onChange={(e) => setFuelType(e.target.value)}
+                required
+              >
+                <option value="">Select Fuel Type</option>
+                <option value="petrol">Petrol</option>
+                <option value="diesel">Diesel</option>
+                <option value="electric">Electric</option>
+              </select>
 
-            <input 
-              type="number" 
-              placeholder="Fuel Efficiency (km/l or kWh/km)" 
-              value={fuelEfficiency} 
-              onChange={e => setFuelEfficiency(e.target.value)} 
-              required 
-            />
-          </>
-        )}
+              <input
+                type="number"
+                placeholder="Fuel Efficiency (km/l or kWh/km)"
+                value={fuelEfficiency}
+                onChange={(e) => setFuelEfficiency(e.target.value)}
+                required
+              />
+            </>
+          )}
         </div>
 
-        {/* Submit Button */}
         <button type="submit" className="btn-submit" disabled={loading}>
           {loading ? "Submitting..." : "Submit Preferences"}
         </button>
 
-        {/* Display Errors */}
         {locationError && <p className="error">{locationError}</p>}
 
-        {/* Itinerary Output */}
         {itinerary && itinerary.itinerary && itinerary.itinerary.length > 0 && (
           <div className="itinerary-section">
             <h3>Generated Itinerary</h3>
@@ -225,8 +330,8 @@ const UserPreferencesForm = () => {
                 {itinerary.itinerary.map((day, index) => (
                   <tr key={index}>
                     <td>{day.DayNumber}</td>
-                    <td>{day.From}</td>
-                    <td>{day.To}</td>
+                    <td>{startAddress || day.From}</td>
+                    <td>{endAddress || day.To}</td>
                     <td>{day.Accommodation}</td>
                     <td>{day.Activities.join(", ")}</td>
                   </tr>
