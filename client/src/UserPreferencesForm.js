@@ -340,6 +340,32 @@ const UserPreferencesForm = () => {
             </table>
           </div>
         )}
+
+        {itinerary && (
+          <div className="carbon-emission-section">
+            <h3>Environmental Impact</h3>
+            <div className="emission-details">
+              <p>
+                <strong>Total Distance:</strong> {itinerary.totalTravelDistance}{" "}
+                km
+              </p>
+              <p>
+                <strong>Carbon Emission:</strong> {itinerary.carbonEmission} kg
+                CO2
+              </p>
+              <div className="emission-tips">
+                <p>
+                  <strong>Impact Level:</strong>{" "}
+                  {itinerary.carbonEmission < 50
+                    ? "Low Impact 🌱"
+                    : itinerary.carbonEmission < 100
+                    ? "Moderate Impact 🌿"
+                    : "High Impact 🌳"}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </form>
     </LoadScript>
   );
