@@ -159,13 +159,45 @@ const UserPreferencesForm = () => {
         );
       }
 
-      setItinerary(fetchedItinerary);
+      const resolvedItinerary = await Promise.all(
+        fetchedItinerary.itinerary.map(async (day) => {
+          const fromName = await getLocationName(day.From);
+          const toName = await getLocationName(day.To);
+          return { ...day, From: fromName, To: toName };
+        })
+      );
+
+      setItinerary({
+        ...fetchedItinerary,
+        itinerary: resolvedItinerary,
+      });
     } catch (error) {
       console.error(`Error: ${error.message}`);
       setLocationError(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
+  };
+  const getLocationName = async (latLngString) => {
+    if (!latLngString || !latLngString.includes(",")) {
+      return latLngString; // fallback to original if format is bad
+    }
+
+    const [latStr, lngStr] = latLngString.split(",");
+    const lat = parseFloat(latStr);
+    const lng = parseFloat(lngStr);
+
+    if (isNaN(lat) || isNaN(lng)) {
+      return latLngString; // fallback again
+    }
+
+    const apiKey = "AIzaSyA9azTdCHv4RBAQms7mYHlew9TfATz56-E";
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
+    );
+
+    const data = await response.json();
+    return data.results[0]?.formatted_address || latLngString;
   };
 
   return (
@@ -330,8 +362,8 @@ const UserPreferencesForm = () => {
                 {itinerary.itinerary.map((day, index) => (
                   <tr key={index}>
                     <td>{day.DayNumber}</td>
-                    <td>{startAddress || day.From}</td>
-                    <td>{endAddress || day.To}</td>
+                    <td>{day.From}</td>
+                    <td>{day.To}</td>
                     <td>{day.Accommodation}</td>
                     <td>{day.Activities.join(", ")}</td>
                   </tr>
