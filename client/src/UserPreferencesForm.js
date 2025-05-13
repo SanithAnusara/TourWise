@@ -66,7 +66,7 @@ const UserPreferencesForm = () => {
   };
 
   const reverseGeocode = async (lat, lng) => {
-    const apiKey = "AIzaSyA9azTdCHv4RBAQms7mYHlew9TfATz56-E";
+    const apiKey = "AIzaSyAjt-GCTto9WtDApGDNMGD1wkppIli-pHA";
     const response = await fetch(
       `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
     );
